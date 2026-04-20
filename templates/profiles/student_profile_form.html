@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="form-page">
+  <h1>Student profile</h1>
+  <form method="post" enctype="multipart/form-data" class="form-card">{% csrf_token %}{{ form.as_p }}<button class="button">Save profile</button></form>
+</section>
+{% endblock %}

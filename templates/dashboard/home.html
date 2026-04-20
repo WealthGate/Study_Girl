@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Study_girl - Students Becoming Sisters{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Wesley High School, Dominica</p>
+    <h1>Study_girl</h1>
+    <p class="motto">SBS - Students Becoming Sisters</p>
+    <p class="lead">A supportive peer tutoring platform where girls prepare for CSEC together through live study rooms, solo resources, and safe sisterhood.</p>
+    <div class="actions">
+      <a class="button" href="{% url 'signup' %}">Start studying</a>
+      <a class="button secondary" href="{% url 'about' %}">See how it works</a>
+    </div>
+  </div>
+  <div class="hero-panel">
+    <div class="portrait-card">
+      <div class="avatar-art">SG</div>
+      <h2>Tonight's study circle</h2>
+      <p>Mathematics, Biology, English A</p>
+      <span class="badge">Ministry demo ready</span>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="section-heading">
+    <p class="eyebrow">How it works</p>
+    <h2>Simple support before exams feel too heavy</h2>
+  </div>
+  <div class="steps">
+    <article><span>1</span><h3>Create a profile</h3><p>Tell Study_girl what subjects you need help with and how you like to learn.</p></article>
+    <article><span>2</span><h3>Find a study sister</h3><p>Browse approved tutors by subject, personality traits, school, and availability.</p></article>
+    <article><span>3</span><h3>Study safely</h3><p>Meet in a private room with video, chat, screen sharing, and a shared whiteboard.</p></article>
+  </div>
+</section>
+
+<section class="split-section">
+  <div>
+    <p class="eyebrow">Find your study sister</p>
+    <h2>Peer tutoring with confidence and care</h2>
+    <p>Students can request sessions from approved tutors, leave feedback, and continue with a trusted match after a positive first session.</p>
+  </div>
+  <div>
+    <p class="eyebrow">Solo study mode</p>
+    <h2>Resources for independent practice</h2>
+    <p>Notes, videos, CSEC subject resources, royalty-free ambience links, and focus reminders help girls study even when no tutor is available.</p>
+  </div>
+</section>
+
+<section class="band safety">
+  <div class="section-heading">
+    <p class="eyebrow">Safe and supportive</p>
+    <h2>No public wall. No random messaging. Clear reporting.</h2>
+    <p>Connections happen through the platform flow, tutor profiles require approval, and students can report concerns to staff.</p>
+  </div>
+  <div class="cards">
+    <article class="card"><h3>“I finally understood equations.”</h3><p>Demo student, Form 4</p></article>
+    <article class="card"><h3>“Teaching helped me revise too.”</h3><p>Demo tutor, Form 5</p></article>
+    <article class="card"><h3>“The whiteboard made it clear.”</h3><p>Demo session feedback</p></article>
+  </div>
+</section>
+{% endblock %}

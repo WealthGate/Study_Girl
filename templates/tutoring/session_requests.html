@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header"><p class="eyebrow">Sessions</p><h1>Requests</h1></section>
+<section class="content-grid">
+  <article class="card"><h2>Sent by me</h2>{% for item in sent %}<p>{{ item.tutor.full_name }} - {{ item.subject }} - {{ item.get_status_display }}</p>{% empty %}<p>No sent requests.</p>{% endfor %}</article>
+  <article class="card"><h2>For me as tutor</h2>{% for item in received %}<p>{{ item.student.username }} - {{ item.subject }} - {{ item.get_status_display }}
+    {% if item.status == "pending" %}<br><a href="{% url 'respond_to_request' item.id 'accept' %}">Accept</a> - <a href="{% url 'respond_to_request' item.id 'decline' %}">Decline</a>{% endif %}
+  </p>{% empty %}<p>No tutor requests.</p>{% endfor %}</article>
+</section>
+{% endblock %}

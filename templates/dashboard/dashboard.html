@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header">
+  <p class="eyebrow">Dashboard</p>
+  <h1>Welcome, {{ user.username }}</h1>
+  <p>Use this page as your starting point for tutoring, solo study, feedback, and safety.</p>
+  <div class="actions">
+    {% if student_profile %}<a class="button" href="{% url 'edit_student_profile' %}">Edit student profile</a>{% endif %}
+    {% if tutor_profile %}<a class="button" href="{% url 'edit_tutor_profile' %}">Edit tutor profile</a>{% endif %}
+    {% if not student_profile and not tutor_profile %}<a class="button" href="{% url 'edit_student_profile' %}">Create student profile</a>{% endif %}
+  </div>
+</section>
+<section class="content-grid">
+  <article class="card"><h2>Profile</h2>
+    {% if tutor_profile %}
+      <p>Tutor status: <strong>{{ tutor_profile.get_approval_status_display }}</strong></p>
+      <p>Rating: {{ tutor_profile.average_rating }} - Sessions: {{ tutor_profile.completed_sessions }}</p>
+    {% elif student_profile %}
+      <p>{{ student_profile.school }} - {{ student_profile.form_year }}</p>
+      <p>{{ student_profile.short_intro|default:"Complete your profile so tutors understand your goals." }}</p>
+    {% endif %}
+  </article>
+  <article class="card"><h2>Quick actions</h2>
+    <p><a href="{% url 'tutor_list' %}">Find an approved tutor</a></p>
+    <p><a href="{% url 'session_requests' %}">View session requests</a></p>
+    <p><a href="{% url 'resource_library' %}">Open solo study mode</a></p>
+    <p><a href="{% url 'report_user' %}">Report a concern</a></p>
+  </article>
+  <article class="card"><h2>Recent sessions</h2>
+    {% for session in my_sessions %}
+      <p>{{ session.subject }} - {{ session.get_status_display }} - <a href="{% url 'study_room' session.id %}">Room</a></p>
+    {% empty %}<p>No sessions yet.</p>{% endfor %}
+  </article>
+</section>
+{% endblock %}

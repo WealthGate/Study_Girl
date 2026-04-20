@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header">
+  <p class="eyebrow">Solo study mode</p>
+  <h1>Study library</h1>
+  <p>Use notes, videos, playlists, and focus ambience when a live tutor is not available.</p>
+  <div class="actions"><a class="button" href="{% url 'upload_resource' %}">Upload resource</a></div>
+</section>
+<form method="get" class="filter-bar">
+  <select name="subject"><option value="">All CSEC subjects</option>{% for subject in subjects %}<option value="{{ subject.id }}">{{ subject.name }}</option>{% endfor %}</select>
+  <button class="button small">Filter</button>
+</form>
+<section class="quote-strip">{% for quote in quotes %}<p>{{ quote }}</p>{% endfor %}</section>
+<section class="resource-grid">
+  {% for item in resources %}
+    <article class="card">
+      <span class="badge">{{ item.get_resource_type_display }}</span>
+      <h2>{{ item.title }}</h2>
+      <p>{{ item.subject }}</p>
+      <p>{{ item.description }}</p>
+      {% if item.external_link %}<a href="{{ item.external_link }}" target="_blank" rel="noreferrer">Open link</a>{% endif %}
+      {% if item.file %}<a href="{{ item.file.url }}">Open file</a>{% endif %}
+    </article>
+  {% empty %}<p>No resources yet. Seed demo data or upload the first resource.</p>{% endfor %}
+</section>
+{% endblock %}

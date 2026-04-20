@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header">
+  <p class="eyebrow">Tutor discovery</p>
+  <h1>Find your study sister</h1>
+  <p>Only approved tutors appear here.</p>
+</section>
+<form method="get" class="filter-bar">
+  <select name="subject"><option value="">Any subject</option>{% for subject in subjects %}<option value="{{ subject.id }}">{{ subject.name }}</option>{% endfor %}</select>
+  <select name="trait"><option value="">Any personality</option>{% for trait in traits %}<option value="{{ trait.id }}">{{ trait.name }}</option>{% endfor %}</select>
+  <input name="availability" placeholder="Availability">
+  <input name="school" placeholder="School or parish">
+  <select name="sort"><option value="rating">Top rating</option><option value="sessions">Most sessions</option></select>
+  <button class="button small">Filter</button>
+</form>
+<section class="tutor-grid">
+  {% for tutor in tutors %}
+    <article class="tutor-card">
+      <div class="avatar-art small-avatar">{{ tutor.full_name|slice:":2" }}</div>
+      <h2>{{ tutor.full_name }}</h2>
+      <p>{{ tutor.short_bio|truncatewords:18 }}</p>
+      <p>{% for subject in tutor.subjects.all %}<span class="pill">{{ subject.name }}</span>{% endfor %}</p>
+      <p class="muted">Rating {{ tutor.average_rating }} - {{ tutor.completed_sessions }} sessions</p>
+      <a class="button small" href="{% url 'tutor_profile_detail' tutor.id %}">View profile</a>
+    </article>
+  {% empty %}<p>No approved tutors match those filters yet.</p>{% endfor %}
+</section>
+{% endblock %}

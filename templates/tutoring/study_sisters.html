@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header"><p class="eyebrow">SBS</p><h1>Study Sisters</h1></section>
+<section class="content-grid">
+  {% for connection in connections %}
+    <article class="card">
+      <h2>{{ connection.student.username }} + {{ connection.tutor.username }}</h2>
+      <p>Status: {{ connection.get_status_display }} - Sessions: {{ connection.session_count }}</p>
+      {% if connection.vibe_unlocked %}<p class="badge">SBS Vibe unlocked</p>{% endif %}
+      {% if connection.status != "blocked" %}<a href="{% url 'block_connection' connection.id %}">Block connection</a>{% endif %}
+    </article>
+  {% empty %}<p>No Study Sister connections yet.</p>{% endfor %}
+</section>
+{% endblock %}

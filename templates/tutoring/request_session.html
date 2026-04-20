@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="form-page">
+  <h1>Request a session with {{ tutor.full_name }}</h1>
+  <form method="post" class="form-card">{% csrf_token %}{{ form.as_p }}<button class="button">Send request</button></form>
+</section>
+{% endblock %}

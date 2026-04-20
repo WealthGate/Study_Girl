@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header">
+  <p class="eyebrow">Approved tutor</p>
+  <h1>{{ tutor.full_name }}</h1>
+  <p>{{ tutor.short_bio }}</p>
+  <div class="actions"><a class="button" href="{% url 'request_session' tutor.id %}">Request a session</a><a class="button secondary" href="{% url 'report_user' %}">Report concern</a></div>
+</section>
+<section class="content-grid">
+  <article class="card"><h2>Subjects</h2><p>{% for subject in tutor.subjects.all %}<span class="pill">{{ subject.name }}</span>{% empty %}No subjects listed.{% endfor %}</p></article>
+  <article class="card"><h2>Style</h2><p>{{ tutor.tutoring_style|default:"Kind, clear peer support." }}</p><p>{{ tutor.availability }}</p></article>
+  <article class="card"><h2>Vibes</h2><p>Rating {{ tutor.average_rating }} - {{ tutor.completed_sessions }} sessions - {{ tutor.vibes_earned }} vibes</p></article>
+</section>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="form-page wide">
+  <h1>Tutor application</h1>
+  <p>Your profile stays pending until a staff member approves it. Complete the checklist honestly.</p>
+  <form method="post" enctype="multipart/form-data" class="form-card">{% csrf_token %}
+    <h2>Public tutor profile</h2>{{ profile_form.as_p }}
+    <h2>Readiness checklist</h2>{{ application_form.as_p }}
+    <button class="button">Save application</button>
+  </form>
+</section>
+{% endblock %}

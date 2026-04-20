@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: study-girl
+    env: python
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate"
+    startCommand: "daphne study_girl.asgi:application --bind 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: study-girl-db
+          property: connectionString
+databases:
+  - name: study-girl-db
+    databaseName: study_girl
+    user: study_girl

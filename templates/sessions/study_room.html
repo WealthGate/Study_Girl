@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Study Room{% endblock %}
+{% block content %}
+<section class="room" data-session-id="{{ study_session.id }}" data-current-user="{{ user.username }}">
+  <div class="room-topbar">
+    <div>
+      <p class="eyebrow">Live study room</p>
+      <h1>{{ study_session.subject }} session</h1>
+      <p id="statusBanner">Connecting room tools...</p>
+    </div>
+    <div class="timer"><span id="sessionTimer">00:00</span></div>
+  </div>
+
+  <div id="focusWarning" class="focus-warning hidden">
+    Focus reminder: Study_girl can detect tab changes and fullscreen exit, but it cannot block phone or operating-system notifications. Please enable Do Not Disturb on your device.
+  </div>
+
+  <div class="room-layout">
+    <section class="media-panel">
+      <div class="video-grid" id="videoGrid">
+        <div class="video-tile"><video id="localVideo" autoplay muted playsinline></video><span>You</span></div>
+        <div class="video-tile"><video id="remoteVideo" autoplay playsinline></video><span>Study sister</span></div>
+        <div class="video-tile shared hidden" id="screenTile"><video id="screenVideo" autoplay playsinline></video><span>Shared screen</span></div>
+      </div>
+      <div class="room-controls">
+        <button id="toggleMic">Mic</button>
+        <button id="toggleCamera">Camera</button>
+        <button id="shareScreen">Share screen</button>
+        <button id="focusMode">Focus mode</button>
+        <a class="button danger small" href="{% url 'leave_session' study_session.id %}">Leave</a>
+      </div>
+    </section>
+
+    <aside class="study-tools">
+      <div class="tool-tabs">
+        <button data-tab="chat" class="active">Chat</button>
+        <button data-tab="board">Whiteboard</button>
+        <button data-tab="music">Music</button>
+      </div>
+      <section id="chatPanel" class="tool-panel">
+        <div id="chatMessages" class="chat-messages"></div>
+        <form id="chatForm" class="chat-form"><input id="chatInput" placeholder="Encourage or ask a question"><button>Send</button></form>
+      </section>
+      <section id="boardPanel" class="tool-panel hidden">
+        <div class="board-controls"><button id="pencilTool">Pencil</button><button id="eraserTool">Eraser</button><button id="clearBoard">Clear</button></div>
+        <canvas id="whiteboard" width="720" height="420"></canvas>
+      </section>
+      <section id="musicPanel" class="tool-panel hidden">
+        <h2>Music mode MVP</h2>
+        <p>No copyrighted music is bundled. Use royalty-free ambience links or the simple built-in focus hum.</p>
+        <button id="noiseButton">Start focus sound</button>
+        <p><a href="https://www.youtube.com/results?search_query=royalty+free+study+ambience" target="_blank" rel="noreferrer">Find royalty-free ambience</a></p>
+      </section>
+    </aside>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/study_room.js' %}"></script>
+{% endblock %}

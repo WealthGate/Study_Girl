@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="form-page">
+  <h1>Session feedback</h1>
+  <p>Your feedback helps decide whether this match should become active Study Sisters.</p>
+  <form method="post" class="form-card">{% csrf_token %}{{ form.as_p }}<button class="button">Save feedback</button></form>
+</section>
+{% endblock %}

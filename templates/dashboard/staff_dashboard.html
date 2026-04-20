@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-header">
+  <p class="eyebrow">Admin dashboard</p>
+  <h1>Study_girl safety and demo overview</h1>
+  <p>Use Django admin for detailed editing. This page gives ministry-demo statistics at a glance.</p>
+</section>
+<section class="band">
+  <div class="section-heading"><p class="eyebrow">Tutor approvals</p><h2>Pending applications</h2></div>
+  <div class="content-grid">
+    {% for application in pending_applications %}
+      <article class="card">
+        <h3>{{ application.user.username }}</h3>
+        <p>Ready checklist: {% if application.ready_for_review %}complete{% else %}incomplete{% endif %}</p>
+        <a href="{% url 'review_tutor_application' application.id 'approve' %}">Approve</a> -
+        <a href="{% url 'review_tutor_application' application.id 'reject' %}">Reject</a>
+      </article>
+    {% empty %}
+      <p>No pending tutor applications.</p>
+    {% endfor %}
+  </div>
+</section>
+<section class="stats-grid">
+  <div><strong>{{ total_users }}</strong><span>Total users</span></div>
+  <div><strong>{{ total_students }}</strong><span>Students</span></div>
+  <div><strong>{{ total_tutors }}</strong><span>Approved tutors</span></div>
+  <div><strong>{{ pending_tutors }}</strong><span>Pending tutors</span></div>
+  <div><strong>{{ total_sessions }}</strong><span>Study sessions</span></div>
+  <div><strong>{{ active_connections }}</strong><span>Active sisters</span></div>
+  <div><strong>{{ feedback_average }}</strong><span>Avg feedback</span></div>
+  <div><strong>{{ open_reports }}</strong><span>Open reports</span></div>
+</section>
+{% endblock %}
