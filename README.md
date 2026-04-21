@@ -5,8 +5,17 @@ Study_girl is a Python-first Django MVP for high school female students at Wesle
 Motto: **SBS - Students Becoming Sisters**
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/WealthGate/Study_Girl)
+[![Deploy to Koyeb](https://www.koyeb.com/static/images/deploy/button.svg)](https://app.koyeb.com/deploy?type=git&builder=dockerfile&repository=github.com/WealthGate/Study_Girl&branch=main&name=studygirl&ports=8000;http;/&env[DEBUG]=False&env[ALLOWED_HOSTS]=.koyeb.app,localhost,127.0.0.1)
 
-Planned public test URL after Render deployment:
+Planned public test URL after Koyeb deployment:
+
+```text
+https://studygirl-<your-koyeb-org>.koyeb.app
+```
+
+Koyeb assigns the exact `*.koyeb.app` URL after deployment.
+
+Planned public test URL after Render deployment, if using Render:
 
 ```text
 https://studygirl.onrender.com
@@ -192,6 +201,44 @@ https://studygirl.onrender.com
 ```
 
 If the public site shows an error after first deploy, open the Render service logs. Most first-deploy issues are missing environment variables or a database that has not finished provisioning yet.
+
+## Free Koyeb deployment
+
+If Render asks for payment, use Koyeb for the school testing link. This repository includes a `Dockerfile` and `start-koyeb.sh` for Koyeb.
+
+1. Open the GitHub repository:
+
+```text
+https://github.com/WealthGate/Study_Girl
+```
+
+2. Click the **Deploy to Koyeb** button near the top of this README.
+3. Sign in to Koyeb and connect GitHub if asked.
+4. Keep the app name as:
+
+```text
+studygirl
+```
+
+5. Choose the free web service instance if Koyeb offers multiple choices.
+6. Deploy.
+
+Koyeb will show the public student testing URL after deployment. It will look similar to:
+
+```text
+https://studygirl-<your-koyeb-org>.koyeb.app
+```
+
+For this free test deployment, the app uses SQLite inside the service. The startup script runs migrations and `seed_demo` automatically, so demo accounts are available after each deployment:
+
+```text
+student1 / demo12345
+student2 / demo12345
+tutor1 / demo12345
+tutor2 / demo12345
+```
+
+Important limitation: if the free service restarts from a fresh filesystem, demo data is recreated. This is acceptable for student testing, but a long-term school rollout should use PostgreSQL.
 
 ## Admin workflow
 
