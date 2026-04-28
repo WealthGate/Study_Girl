@@ -5,6 +5,16 @@ from profiles.models import StudentProfile, TutorApplication, TutorProfile
 
 
 class SignUpTests(TestCase):
+    def test_login_page_links_to_open_signup(self):
+        response = self.client.get(reverse("login"))
+        self.assertContains(response, reverse("signup"))
+        self.assertContains(response, "Create your account")
+
+    def test_signup_page_links_back_to_login(self):
+        response = self.client.get(reverse("signup"))
+        self.assertContains(response, "Students can create their own username and password")
+        self.assertContains(response, reverse("login"))
+
     def test_student_signup_creates_profile_and_logs_in(self):
         response = self.client.post(reverse("signup"), {
             "username": "amara",

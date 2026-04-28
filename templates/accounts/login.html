@@ -2,6 +2,9 @@
 {% block content %}
 <section class="form-page">
   <h1>Log in</h1>
-  <form method="post" class="form-card">{% csrf_token %}{{ form.as_p }}<button class="button">Log in</button></form>
+  <div class="form-card">
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button class="button">Log in</button></form>
+    <p class="auth-switch">New student? <a href="{% url 'signup' %}">Create your account</a>.</p>
+  </div>
 </section>
 {% endblock %}

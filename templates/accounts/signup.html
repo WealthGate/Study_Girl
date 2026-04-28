@@ -2,6 +2,10 @@
 {% block content %}
 <section class="form-page">
   <h1>Create your Study Girl account</h1>
-  <form method="post" class="form-card">{% csrf_token %}{{ form.as_p }}<button class="button">Sign up</button></form>
+  <div class="form-card">
+    <p class="muted">Students can create their own username and password, then log in from any shared test link.</p>
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button class="button">Create account</button></form>
+    <p class="auth-switch">Already have an account? <a href="{% url 'login' %}">Log in</a>.</p>
+  </div>
 </section>
 {% endblock %}

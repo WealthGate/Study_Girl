@@ -186,6 +186,11 @@ input, select, textarea {
 .form-page.wide { max-width: 1100px; }
 .form-card p { margin-bottom: 16px; }
 .form-card label { display: block; font-weight: 800; margin-bottom: 5px; }
+.auth-switch {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
 .helptext { display: block; color: var(--muted); font-size: .9rem; }
 .errorlist { color: #a21d35; }
 .messages { padding: 12px clamp(18px, 6vw, 80px); }
