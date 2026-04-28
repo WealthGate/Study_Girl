@@ -12,6 +12,8 @@ venv/
 db.sqlite3
 media/
 staticfiles/
+*.log
+tools/
 
 # Editors and operating system files
 .vscode/

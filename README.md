@@ -147,6 +147,34 @@ For the live room WebSocket behavior, `daphne` is the better match because it ru
 python manage.py test
 ```
 
+## Temporary public test link
+
+Use this option when students need to test from different locations before the app is permanently deployed. It runs the app on your computer and creates a temporary public HTTPS link through Cloudflare Tunnel.
+
+This is best for short demonstrations. Keep the PowerShell window open while students are testing; closing it closes the public link.
+
+```powershell
+.\scripts\start-public-demo.ps1
+```
+
+The script will:
+
+- run database migrations,
+- refresh demo data,
+- start the Daphne ASGI server if it is not already running,
+- create a public `https://...trycloudflare.com` link that can be shared with students.
+
+Demo accounts:
+
+```text
+student1 / demo12345
+student2 / demo12345
+tutor1 / demo12345
+tutor2 / demo12345
+```
+
+Firebase Hosting and Netlify static hosting are not a good match for this app because Study_girl is a Django ASGI app with WebSockets. For a more permanent free or low-cost public link, use a Python/container host such as Koyeb or Render.
+
 ## Render deployment
 
 The repository includes `render.yaml`, so Render can create the web service and PostgreSQL database from GitHub.

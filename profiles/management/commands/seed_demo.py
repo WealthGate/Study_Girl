@@ -68,12 +68,18 @@ class Command(BaseCommand):
             students.append(profile)
 
         for index in range(3):
-            session, _ = StudySession.objects.get_or_create(
+            session = StudySession.objects.filter(
                 student=students[index].user,
                 tutor=tutors[index].user,
                 subject=subject_objects["Mathematics"],
-                defaults={"status": "completed"},
-            )
+            ).first()
+            if session is None:
+                session = StudySession.objects.create(
+                    student=students[index].user,
+                    tutor=tutors[index].user,
+                    subject=subject_objects["Mathematics"],
+                    status="completed",
+                )
             session.status = "completed"
             session.save()
             for reviewer in [session.student, session.tutor]:

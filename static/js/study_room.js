@@ -4,6 +4,15 @@ const currentUser = room.dataset.currentUser;
 const scheme = window.location.protocol === "https:" ? "wss" : "ws";
 const socket = new WebSocket(`${scheme}://${window.location.host}/ws/study-room/${sessionId}/`);
 
+
+// This file controls the live study room experience.
+// the browser uses:
+// 1. WebSocket messages to coordinate the room, chat, whiteboard, and WebRTC setup.
+// 2. WebRTC to send camera, microphone, and screen-sharing media between students.
+// 3. DOM event listeners to react when users click buttons, type chat, draw, or enter Focus Mode.
+// Good demo path: join a room, turn mic/camera on or off, send chat, draw on the board,
+// share the screen, enable Focus Mode, then explain how each section below supports that flow.
+
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 const screenVideo = document.getElementById("screenVideo");
@@ -27,12 +36,16 @@ let oscillator;
 const peerConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 function send(payload) {
+  // Sends a small JSON message to Django Channels.
+  // These messages do not carry the video itself; they coordinate room events.
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(payload));
   }
 }
 
 async function startMedia() {
+  // Asks the browser for permission to use the camera and microphone.
+  // If permission is denied, the app still allows chat and whiteboard use.
   try {
     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
     localVideo.srcObject = localStream;
@@ -44,6 +57,8 @@ async function startMedia() {
 }
 
 function createPeer() {
+  // Creates the WebRTC connection used for direct browser-to-browser media.
+  // The STUN server helps browsers discover how to connect across networks.
   peer = new RTCPeerConnection(peerConfig);
   localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
   peer.ontrack = event => {
@@ -56,6 +71,8 @@ function createPeer() {
 
 socket.addEventListener("open", startMedia);
 socket.addEventListener("message", async event => {
+  // Handles every real-time event coming from the server:
+  // presence updates, WebRTC offers/answers, ICE candidates, chat, and whiteboard drawing.
   const data = JSON.parse(event.data);
   if (data.type === "presence") {
     statusBanner.textContent = `${data.user} ${data.status} the room.`;
@@ -84,14 +101,18 @@ socket.addEventListener("message", async event => {
 });
 
 document.getElementById("toggleMic").addEventListener("click", () => {
+  // Enables or disables the user's microphone track without leaving the room.
   localStream?.getAudioTracks().forEach(track => track.enabled = !track.enabled);
 });
 
 document.getElementById("toggleCamera").addEventListener("click", () => {
+  // Enables or disables the user's camera track without ending the WebRTC connection.
   localStream?.getVideoTracks().forEach(track => track.enabled = !track.enabled);
 });
 
 document.getElementById("shareScreen").addEventListener("click", async () => {
+  // Replaces the camera video track with the screen-sharing track.
+  // When screen sharing stops, the app switches the connection back to the camera.
   try {
     const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
     screenVideo.srcObject = screenStream;
@@ -110,6 +131,7 @@ document.getElementById("shareScreen").addEventListener("click", async () => {
 });
 
 chatForm.addEventListener("submit", event => {
+  // Sends chat text through the WebSocket and immediately shows it for the sender.
   event.preventDefault();
   const message = chatInput.value.trim();
   if (!message) return;
@@ -119,6 +141,7 @@ chatForm.addEventListener("submit", event => {
 });
 
 function appendChat(user, message) {
+  // Adds one chat line to the chat panel and keeps the latest message visible.
   const line = document.createElement("p");
   line.innerHTML = `<strong>${user}:</strong> ${escapeHtml(message)}`;
   chatMessages.appendChild(line);
@@ -126,10 +149,12 @@ function appendChat(user, message) {
 }
 
 function escapeHtml(value) {
+  // Prevents typed chat text from being treated as HTML by the browser.
   return value.replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
 }
 
 document.querySelectorAll("[data-tab]").forEach(button => {
+  // Switches between the study room side panels, such as chat and whiteboard tools.
   button.addEventListener("click", () => {
     document.querySelectorAll("[data-tab]").forEach(item => item.classList.remove("active"));
     button.classList.add("active");
@@ -141,11 +166,13 @@ document.querySelectorAll("[data-tab]").forEach(button => {
 document.getElementById("pencilTool").addEventListener("click", () => tool = "pencil");
 document.getElementById("eraserTool").addEventListener("click", () => tool = "eraser");
 document.getElementById("clearBoard").addEventListener("click", () => {
+  // Clears the local whiteboard and tells the other participant to clear theirs too.
   boardContext.clearRect(0, 0, whiteboard.width, whiteboard.height);
   send({ type: "clear_board" });
 });
 
 function pointerPosition(event) {
+  // Converts the pointer position on the visible canvas into the canvas drawing coordinates.
   const rect = whiteboard.getBoundingClientRect();
   return {
     x: (event.clientX - rect.left) * (whiteboard.width / rect.width),
@@ -169,6 +196,7 @@ whiteboard.addEventListener("pointermove", event => {
 window.addEventListener("pointerup", () => isDrawing = false);
 
 function drawLine(x1, y1, x2, y2, color, width, shouldSend) {
+  // Draws a line locally. If shouldSend is true, the same line is sent to the other user.
   boardContext.strokeStyle = color;
   boardContext.lineWidth = width;
   boardContext.lineCap = "round";
@@ -180,12 +208,14 @@ function drawLine(x1, y1, x2, y2, color, width, shouldSend) {
 }
 
 document.getElementById("focusMode").addEventListener("click", async () => {
+  // Focus Mode encourages fewer distractions by changing the room style and requesting fullscreen.
   room.classList.toggle("focus-active");
   focusWarning.classList.remove("hidden");
   try { await document.documentElement.requestFullscreen(); } catch (error) {}
 });
 
 document.addEventListener("visibilitychange", () => {
+  // The app cannot block phone or system notifications, but it can warn when the tab is hidden.
   if (document.hidden) {
     tabWarnings += 1;
     focusWarning.textContent = `Focus reminder: you have switched tabs ${tabWarnings} time(s). Enable Do Not Disturb for phone notifications.`;
@@ -193,6 +223,7 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 document.addEventListener("fullscreenchange", () => {
+  // Reminds the student that Focus Mode works best when the page stays fullscreen.
   if (!document.fullscreenElement) {
     focusWarning.textContent = "Fullscreen ended. The app cannot block device notifications, but Focus Mode works best in fullscreen with Do Not Disturb enabled.";
     focusWarning.classList.remove("hidden");
@@ -201,6 +232,7 @@ document.addEventListener("fullscreenchange", () => {
 
 let seconds = 0;
 setInterval(() => {
+  // Updates the visible study timer once per second.
   seconds += 1;
   const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
   const secs = String(seconds % 60).padStart(2, "0");
@@ -208,6 +240,7 @@ setInterval(() => {
 }, 1000);
 
 document.getElementById("noiseButton").addEventListener("click", () => {
+  // Starts or stops a quiet focus tone using the browser's Web Audio API.
   if (oscillator) {
     oscillator.stop();
     oscillator = null;
