@@ -22,7 +22,7 @@ def signup(request):
                 TutorApplication.objects.create(user=user)
 
             login(request, user)
-            messages.success(request, "Welcome to Study_girl. Please complete your profile.")
+            messages.success(request, "Welcome to Study Girl. Please complete your profile.")
             return redirect("dashboard")
     else:
         form = SignUpForm()

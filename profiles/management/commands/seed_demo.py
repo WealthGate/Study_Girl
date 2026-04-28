@@ -7,7 +7,7 @@ from tutoring.models import SessionFeedback, StudySession, StudySisterConnection
 
 
 class Command(BaseCommand):
-    help = "Create realistic demo data for a Study_girl presentation."
+    help = "Create realistic demo data for a Study Girl presentation."
 
     def handle(self, *args, **options):
         subjects = [
@@ -102,4 +102,4 @@ class Command(BaseCommand):
                 },
             )
 
-        self.stdout.write(self.style.SUCCESS("Study_girl demo data created. Demo password: demo12345"))
+        self.stdout.write(self.style.SUCCESS("Study Girl demo data created. Demo password: demo12345"))

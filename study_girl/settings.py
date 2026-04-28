@@ -1,4 +1,4 @@
-"""Project settings for Study_girl.
+"""Project settings for Study Girl.
 
 The settings are intentionally simple. Students can run the project with
 SQLite locally, while Render can use PostgreSQL through DATABASE_URL.

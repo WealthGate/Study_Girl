@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Django's command-line helper for the Study_girl project."""
+"""Django's command-line helper for the Study Girl project."""
 import os
 import sys
 

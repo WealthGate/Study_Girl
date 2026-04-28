@@ -1,6 +1,6 @@
-# Study_girl
+# Study Girl
 
-Study_girl is a Python-first Django MVP for high school female students at Wesley High School in Dominica.
+Study Girl is a Python-first Django MVP for high school female students at Wesley High School in Dominica.
 
 Motto: **SBS - Students Becoming Sisters**
 
@@ -173,7 +173,7 @@ tutor1 / demo12345
 tutor2 / demo12345
 ```
 
-Firebase Hosting and Netlify static hosting are not a good match for this app because Study_girl is a Django ASGI app with WebSockets. For a more permanent free or low-cost public link, use a Python/container host such as Koyeb or Render.
+Firebase Hosting and Netlify static hosting are not a good match for this app because Study Girl is a Django ASGI app with WebSockets. For a more permanent free or low-cost public link, use a Python/container host such as Koyeb or Render.
 
 ## Render deployment
 
