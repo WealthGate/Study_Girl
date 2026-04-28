@@ -1,10 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Study Girl - Students Becoming Sisters{% endblock %}
 {% block content %}
 <section class="hero">
   <div class="hero-copy">
     <p class="eyebrow">Wesley High School, Dominica</p>
-    <h1>Study Girl</h1>
+    <h1 class="sr-only">Study Girl</h1>
+    <img class="hero-logo" src="{% static 'img/logo-study-girl.jpeg' %}" alt="Study Girl - Students becoming sisters">
     <p class="motto">SBS - Students Becoming Sisters</p>
     <p class="lead">A supportive peer tutoring platform where girls prepare for CSEC together through live study rooms, solo resources, and safe sisterhood.</p>
     <div class="actions">
@@ -14,7 +16,7 @@
   </div>
   <div class="hero-panel">
     <div class="portrait-card">
-      <div class="avatar-art">SG</div>
+      <img class="card-logo" src="{% static 'img/logo-study-girl.jpeg' %}" alt="Study Girl SBS">
       <h2>Tonight's study circle</h2>
       <p>Mathematics, Biology, English A</p>
       <span class="badge">Ministry demo ready</span>
