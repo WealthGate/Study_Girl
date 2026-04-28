@@ -18,6 +18,10 @@ const remoteVideo = document.getElementById("remoteVideo");
 const screenVideo = document.getElementById("screenVideo");
 const screenTile = document.getElementById("screenTile");
 const statusBanner = document.getElementById("statusBanner");
+const micButton = document.getElementById("toggleMic");
+const cameraButton = document.getElementById("toggleCamera");
+const micSelect = document.getElementById("micSelect");
+const cameraSelect = document.getElementById("cameraSelect");
 const chatMessages = document.getElementById("chatMessages");
 const chatForm = document.getElementById("chatForm");
 const chatInput = document.getElementById("chatInput");
@@ -32,6 +36,7 @@ let tool = "pencil";
 let tabWarnings = 0;
 let audioContext;
 let oscillator;
+let mediaStarted = false;
 
 const peerConfig = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
@@ -43,16 +48,104 @@ function send(payload) {
   }
 }
 
+function mediaConstraints() {
+  const audioDeviceId = micSelect.value;
+  const videoDeviceId = cameraSelect.value;
+  return {
+    audio: audioDeviceId ? { deviceId: { exact: audioDeviceId } } : true,
+    video: videoDeviceId ? { deviceId: { exact: videoDeviceId } } : true
+  };
+}
+
+function updateMediaButtons() {
+  const audioTrack = localStream?.getAudioTracks()[0];
+  const videoTrack = localStream?.getVideoTracks()[0];
+  const micOn = Boolean(audioTrack?.enabled);
+  const cameraOn = Boolean(videoTrack?.enabled);
+
+  micButton.textContent = micOn ? "Mute mic" : "Start mic";
+  cameraButton.textContent = cameraOn ? "Turn camera off" : "Start camera";
+  micButton.classList.toggle("is-off", !micOn);
+  cameraButton.classList.toggle("is-off", !cameraOn);
+}
+
+async function populateDeviceSelects() {
+  if (!navigator.mediaDevices?.enumerateDevices) return;
+
+  const selectedMic = micSelect.value;
+  const selectedCamera = cameraSelect.value;
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const microphones = devices.filter(device => device.kind === "audioinput");
+  const cameras = devices.filter(device => device.kind === "videoinput");
+
+  micSelect.innerHTML = '<option value="">Default microphone</option>';
+  microphones.forEach((device, index) => {
+    const option = document.createElement("option");
+    option.value = device.deviceId;
+    option.textContent = device.label || `Microphone ${index + 1}`;
+    micSelect.appendChild(option);
+  });
+
+  cameraSelect.innerHTML = '<option value="">Default camera</option>';
+  cameras.forEach((device, index) => {
+    const option = document.createElement("option");
+    option.value = device.deviceId;
+    option.textContent = device.label || `Camera ${index + 1}`;
+    cameraSelect.appendChild(option);
+  });
+
+  micSelect.value = [...micSelect.options].some(option => option.value === selectedMic) ? selectedMic : "";
+  cameraSelect.value = [...cameraSelect.options].some(option => option.value === selectedCamera) ? selectedCamera : "";
+}
+
+function stopLocalStream() {
+  localStream?.getTracks().forEach(track => track.stop());
+}
+
+function attachLocalStreamToPeer() {
+  if (!peer || !localStream) return;
+
+  localStream.getTracks().forEach(track => {
+    const sender = peer.getSenders().find(item => item.track?.kind === track.kind);
+    if (sender) {
+      sender.replaceTrack(track);
+    } else {
+      peer.addTrack(track, localStream);
+    }
+  });
+}
+
 async function startMedia() {
   // Asks the browser for permission to use the camera and microphone.
   // If permission is denied, the app still allows chat and whiteboard use.
+  if (!navigator.mediaDevices?.getUserMedia) {
+    statusBanner.textContent = "This browser does not support camera and microphone access.";
+    return false;
+  }
+
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia(mediaConstraints());
+    stopLocalStream();
+    localStream = stream;
     localVideo.srcObject = localStream;
-    createPeer();
-    statusBanner.textContent = "Room ready. Invite your study sister to join.";
+    mediaStarted = true;
+    if (!peer) createPeer();
+    attachLocalStreamToPeer();
+    await populateDeviceSelects();
+    updateMediaButtons();
+    statusBanner.textContent = "Camera and microphone are ready.";
+    return true;
   } catch (error) {
-    statusBanner.textContent = "Camera or microphone permission was denied. Chat and whiteboard still work.";
+    mediaStarted = false;
+    updateMediaButtons();
+    if (error.name === "NotAllowedError" || error.name === "SecurityError") {
+      statusBanner.textContent = "Camera or microphone permission was blocked. Use the browser lock icon to allow camera and mic, then try again.";
+    } else if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError") {
+      statusBanner.textContent = "No camera or microphone was found on this device.";
+    } else {
+      statusBanner.textContent = "Camera or microphone could not start. Try another camera or microphone from the selectors.";
+    }
+    return false;
   }
 }
 
@@ -60,7 +153,7 @@ function createPeer() {
   // Creates the WebRTC connection used for direct browser-to-browser media.
   // The STUN server helps browsers discover how to connect across networks.
   peer = new RTCPeerConnection(peerConfig);
-  localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+  attachLocalStreamToPeer();
   peer.ontrack = event => {
     remoteVideo.srcObject = event.streams[0];
   };
@@ -69,7 +162,11 @@ function createPeer() {
   };
 }
 
-socket.addEventListener("open", startMedia);
+socket.addEventListener("open", async () => {
+  await populateDeviceSelects();
+  statusBanner.textContent = "Room connected. Use Start camera or Start mic if permission does not open automatically.";
+  await startMedia();
+});
 socket.addEventListener("message", async event => {
   // Handles every real-time event coming from the server:
   // presence updates, WebRTC offers/answers, ICE candidates, chat, and whiteboard drawing.
@@ -100,14 +197,34 @@ socket.addEventListener("message", async event => {
   if (data.type === "clear_board") boardContext.clearRect(0, 0, whiteboard.width, whiteboard.height);
 });
 
-document.getElementById("toggleMic").addEventListener("click", () => {
+micButton.addEventListener("click", async () => {
   // Enables or disables the user's microphone track without leaving the room.
-  localStream?.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+  if (!mediaStarted) {
+    await startMedia();
+    return;
+  }
+  const audioTrack = localStream?.getAudioTracks()[0];
+  if (audioTrack) audioTrack.enabled = !audioTrack.enabled;
+  updateMediaButtons();
 });
 
-document.getElementById("toggleCamera").addEventListener("click", () => {
+cameraButton.addEventListener("click", async () => {
   // Enables or disables the user's camera track without ending the WebRTC connection.
-  localStream?.getVideoTracks().forEach(track => track.enabled = !track.enabled);
+  if (!mediaStarted) {
+    await startMedia();
+    return;
+  }
+  const videoTrack = localStream?.getVideoTracks()[0];
+  if (videoTrack) videoTrack.enabled = !videoTrack.enabled;
+  updateMediaButtons();
+});
+
+micSelect.addEventListener("change", async () => {
+  if (mediaStarted) await startMedia();
+});
+
+cameraSelect.addEventListener("change", async () => {
+  if (mediaStarted) await startMedia();
 });
 
 document.getElementById("shareScreen").addEventListener("click", async () => {

@@ -24,8 +24,20 @@
         <div class="video-tile shared hidden" id="screenTile"><video id="screenVideo" autoplay playsinline></video><span>Shared screen</span></div>
       </div>
       <div class="room-controls">
-        <button id="toggleMic">Mic</button>
-        <button id="toggleCamera">Camera</button>
+        <label class="device-control" for="cameraSelect">
+          Camera
+          <select id="cameraSelect">
+            <option value="">Default camera</option>
+          </select>
+        </label>
+        <label class="device-control" for="micSelect">
+          Microphone
+          <select id="micSelect">
+            <option value="">Default microphone</option>
+          </select>
+        </label>
+        <button id="toggleMic" type="button">Start mic</button>
+        <button id="toggleCamera" type="button">Start camera</button>
         <button id="shareScreen">Share screen</button>
         <button id="focusMode">Focus mode</button>
         <a class="button danger small" href="{% url 'leave_session' study_session.id %}">Leave</a>

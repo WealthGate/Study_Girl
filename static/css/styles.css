@@ -170,6 +170,22 @@ input, select, textarea {
 video { width: 100%; height: 100%; object-fit: cover; background: #111; }
 .video-tile span { position: absolute; left: 10px; bottom: 10px; background: rgba(0,0,0,.55); color: white; padding: 4px 8px; border-radius: 8px; }
 .room-controls { flex-wrap: wrap; margin-top: 12px; }
+.device-control {
+  display: grid;
+  gap: 4px;
+  min-width: min(100%, 220px);
+  color: var(--white);
+  font-size: .86rem;
+  font-weight: 800;
+}
+.device-control select {
+  min-height: 42px;
+  color: var(--ink);
+}
+.room-controls button.is-off {
+  background: #31405f;
+  border-color: #52627f;
+}
 .tool-tabs button { flex: 1; border-radius: 0; background: #f7edf0; color: var(--ink); border-color: var(--line); }
 .tool-tabs .active { background: var(--rose); color: white; }
 .tool-panel { padding: 14px; }
