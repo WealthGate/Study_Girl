@@ -7,7 +7,12 @@
     <div>
       <p class="eyebrow">Live study room</p>
       <h1>{{ study_session.subject }} session</h1>
-      <p id="statusBanner">Connecting room tools...</p>
+      <p id="statusBanner">Connecting conference class tools...</p>
+      <p class="muted">Approved students join after their tutor accepts the request. The lead tutor can share the teacher link with another approved tutor.</p>
+      <p><strong>Student class link:</strong> <a href="{% url 'study_room' study_session.id %}">{{ request.scheme }}://{{ request.get_host }}{% url 'study_room' study_session.id %}</a></p>
+      {% if user.is_staff or user == study_session.tutor %}
+        <p><strong>Teacher join link:</strong> <a href="{% url 'join_teacher_class' study_session.id study_session.room_code %}">{{ request.scheme }}://{{ request.get_host }}{% url 'join_teacher_class' study_session.id study_session.room_code %}</a></p>
+      {% endif %}
     </div>
     <div class="timer"><span id="sessionTimer">00:00</span></div>
   </div>
@@ -20,7 +25,6 @@
     <section class="media-panel">
       <div class="video-grid" id="videoGrid">
         <div class="video-tile"><video id="localVideo" autoplay muted playsinline></video><span>You</span></div>
-        <div class="video-tile"><video id="remoteVideo" autoplay playsinline></video><span>Study sister</span></div>
         <div class="video-tile shared hidden" id="screenTile"><video id="screenVideo" autoplay playsinline></video><span>Shared screen</span></div>
       </div>
       <div class="room-controls">

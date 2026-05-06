@@ -14,9 +14,9 @@ const socket = new WebSocket(`${scheme}://${window.location.host}/ws/study-room/
 // share the screen, enable Focus Mode, then explain how each section below supports that flow.
 
 const localVideo = document.getElementById("localVideo");
-const remoteVideo = document.getElementById("remoteVideo");
 const screenVideo = document.getElementById("screenVideo");
 const screenTile = document.getElementById("screenTile");
+const videoGrid = document.getElementById("videoGrid");
 const statusBanner = document.getElementById("statusBanner");
 const micButton = document.getElementById("toggleMic");
 const cameraButton = document.getElementById("toggleCamera");
@@ -30,7 +30,7 @@ const boardContext = whiteboard.getContext("2d");
 const focusWarning = document.getElementById("focusWarning");
 
 let localStream;
-let peer;
+const peers = {};
 let isDrawing = false;
 let tool = "pencil";
 let tabWarnings = 0;
@@ -46,6 +46,14 @@ function send(payload) {
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify(payload));
   }
+}
+
+function sendTo(target, payload) {
+  send({ ...payload, target });
+}
+
+function participantId(username) {
+  return username.replace(/[^a-zA-Z0-9_-]/g, "_");
 }
 
 function mediaConstraints() {
@@ -102,7 +110,7 @@ function stopLocalStream() {
   localStream?.getTracks().forEach(track => track.stop());
 }
 
-function attachLocalStreamToPeer() {
+function attachLocalStreamToPeer(peer) {
   if (!peer || !localStream) return;
 
   localStream.getTracks().forEach(track => {
@@ -113,6 +121,10 @@ function attachLocalStreamToPeer() {
       peer.addTrack(track, localStream);
     }
   });
+}
+
+function attachLocalStreamToPeers() {
+  Object.values(peers).forEach(peer => attachLocalStreamToPeer(peer));
 }
 
 async function startMedia() {
@@ -129,8 +141,7 @@ async function startMedia() {
     localStream = stream;
     localVideo.srcObject = localStream;
     mediaStarted = true;
-    if (!peer) createPeer();
-    attachLocalStreamToPeer();
+    attachLocalStreamToPeers();
     await populateDeviceSelects();
     updateMediaButtons();
     statusBanner.textContent = "Camera and microphone are ready.";
@@ -149,17 +160,47 @@ async function startMedia() {
   }
 }
 
-function createPeer() {
+function remoteTileFor(username) {
+  let tile = document.getElementById(`remoteTile-${participantId(username)}`);
+  if (tile) return tile.querySelector("video");
+
+  tile = document.createElement("div");
+  tile.className = "video-tile";
+  tile.id = `remoteTile-${participantId(username)}`;
+  const video = document.createElement("video");
+  video.autoplay = true;
+  video.playsInline = true;
+  const label = document.createElement("span");
+  label.textContent = username;
+  tile.append(video, label);
+  videoGrid.insertBefore(tile, screenTile);
+  return video;
+}
+
+function removeRemoteTile(username) {
+  document.getElementById(`remoteTile-${participantId(username)}`)?.remove();
+}
+
+function createPeer(username) {
   // Creates the WebRTC connection used for direct browser-to-browser media.
   // The STUN server helps browsers discover how to connect across networks.
-  peer = new RTCPeerConnection(peerConfig);
-  attachLocalStreamToPeer();
+  if (peers[username]) return peers[username];
+  const peer = new RTCPeerConnection(peerConfig);
+  peers[username] = peer;
+  attachLocalStreamToPeer(peer);
   peer.ontrack = event => {
-    remoteVideo.srcObject = event.streams[0];
+    remoteTileFor(username).srcObject = event.streams[0];
   };
   peer.onicecandidate = event => {
-    if (event.candidate) send({ type: "ice", candidate: event.candidate });
+    if (event.candidate) sendTo(username, { type: "ice", candidate: event.candidate });
   };
+  peer.onnegotiationneeded = async () => {
+    if (!localStream || peer.signalingState !== "stable") return;
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+    sendTo(username, { type: "offer", offer });
+  };
+  return peer;
 }
 
 socket.addEventListener("open", async () => {
@@ -171,25 +212,37 @@ socket.addEventListener("message", async event => {
   // Handles every real-time event coming from the server:
   // presence updates, WebRTC offers/answers, ICE candidates, chat, and whiteboard drawing.
   const data = JSON.parse(event.data);
+  if (data.target && data.target !== currentUser) return;
   if (data.type === "presence") {
     statusBanner.textContent = `${data.user} ${data.status} the room.`;
-    if (data.status === "joined" && peer && localStream) {
+    if (data.user === currentUser) return;
+    if (data.status === "joined" && localStream) {
+      const peer = createPeer(data.user);
       const offer = await peer.createOffer();
       await peer.setLocalDescription(offer);
-      send({ type: "offer", offer });
+      sendTo(data.user, { type: "offer", offer });
     }
+    if (data.status === "left") {
+      peers[data.user]?.close();
+      delete peers[data.user];
+      removeRemoteTile(data.user);
+    }
+    return;
   }
   if (data.user === currentUser) return;
-  if (data.type === "offer" && peer) {
+  if (data.type === "offer") {
+    const peer = createPeer(data.user);
     await peer.setRemoteDescription(new RTCSessionDescription(data.offer));
     const answer = await peer.createAnswer();
     await peer.setLocalDescription(answer);
-    send({ type: "answer", answer });
+    sendTo(data.user, { type: "answer", answer });
   }
-  if (data.type === "answer" && peer) {
+  if (data.type === "answer") {
+    const peer = createPeer(data.user);
     await peer.setRemoteDescription(new RTCSessionDescription(data.answer));
   }
-  if (data.type === "ice" && peer && data.candidate) {
+  if (data.type === "ice" && data.candidate) {
+    const peer = createPeer(data.user);
     try { await peer.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch (error) {}
   }
   if (data.type === "chat") appendChat(data.user, data.message);
@@ -235,12 +288,17 @@ document.getElementById("shareScreen").addEventListener("click", async () => {
     screenVideo.srcObject = screenStream;
     screenTile.classList.remove("hidden");
     const screenTrack = screenStream.getVideoTracks()[0];
-    const sender = peer?.getSenders().find(item => item.track && item.track.kind === "video");
-    if (sender) sender.replaceTrack(screenTrack);
+    Object.values(peers).forEach(peer => {
+      const sender = peer.getSenders().find(item => item.track && item.track.kind === "video");
+      if (sender) sender.replaceTrack(screenTrack);
+    });
     screenTrack.onended = () => {
       screenTile.classList.add("hidden");
       const cameraTrack = localStream?.getVideoTracks()[0];
-      if (sender && cameraTrack) sender.replaceTrack(cameraTrack);
+      Object.values(peers).forEach(peer => {
+        const sender = peer.getSenders().find(item => item.track && item.track.kind === "video");
+        if (sender && cameraTrack) sender.replaceTrack(cameraTrack);
+      });
     };
   } catch (error) {
     statusBanner.textContent = "Screen sharing was cancelled or denied by the browser.";

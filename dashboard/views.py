@@ -23,7 +23,11 @@ def about(request):
 def dashboard(request):
     student_profile = getattr(request.user, "student_profile", None)
     tutor_profile = getattr(request.user, "tutor_profile", None)
-    my_sessions = StudySession.objects.filter(student=request.user) | StudySession.objects.filter(tutor=request.user)
+    my_sessions = (
+        StudySession.objects.filter(student=request.user)
+        | StudySession.objects.filter(tutor=request.user)
+        | StudySession.objects.filter(participants__user=request.user, participants__status="approved")
+    )
     requests = SessionRequest.objects.filter(student=request.user)
     if tutor_profile:
         requests = requests | SessionRequest.objects.filter(tutor=tutor_profile)

@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from profiles.models import PersonalityTrait, Subject, TutorProfile
 from .forms import SessionFeedbackForm, SessionRequestForm
-from .models import SessionRequest, StudySession, StudySisterConnection
+from .models import SessionRequest, StudySession, StudySessionParticipant, StudySisterConnection
 from .services import update_connection_after_feedback
 
 
@@ -65,11 +65,26 @@ def respond_to_request(request, request_id, action):
         raise PermissionDenied
     if action == "accept":
         study_session = session_request.accept()
-        messages.success(request, "Request accepted and study room created.")
+        messages.success(request, "Request accepted. The student can now use the class link to join.")
         return redirect("study_room", session_id=study_session.id)
     session_request.decline()
     messages.info(request, "Request declined.")
     return redirect("session_requests")
+
+
+@login_required
+def join_teacher_class(request, session_id, room_code):
+    study_session = get_object_or_404(StudySession, pk=session_id, room_code=room_code)
+    tutor_profile = getattr(request.user, "tutor_profile", None)
+    if not tutor_profile or tutor_profile.approval_status != "approved":
+        raise PermissionDenied
+    StudySessionParticipant.objects.update_or_create(
+        session=study_session,
+        user=request.user,
+        defaults={"role": "teacher", "status": "approved", "approved_by": study_session.tutor},
+    )
+    messages.success(request, "You joined this conference class as a teacher.")
+    return redirect("study_room", session_id=study_session.id)
 
 
 @login_required

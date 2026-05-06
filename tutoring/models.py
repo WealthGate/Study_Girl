@@ -25,13 +25,30 @@ class SessionRequest(models.Model):
     def accept(self):
         self.status = "accepted"
         self.save()
-        return StudySession.objects.create(
-            session_request=self,
-            student=self.student,
+        study_session = StudySession.objects.filter(
             tutor=self.tutor.user,
             subject=self.subject,
-            status="scheduled",
+            status__in=["scheduled", "live"],
+        ).order_by("created_at").first()
+        if not study_session:
+            study_session = StudySession.objects.create(
+                session_request=self,
+                student=self.student,
+                tutor=self.tutor.user,
+                subject=self.subject,
+                status="scheduled",
+            )
+        StudySessionParticipant.objects.get_or_create(
+            session=study_session,
+            user=self.tutor.user,
+            defaults={"role": "lead_tutor", "approved_by": self.tutor.user},
         )
+        StudySessionParticipant.objects.update_or_create(
+            session=study_session,
+            user=self.student,
+            defaults={"role": "student", "status": "approved", "approved_by": self.tutor.user, "source_request": self},
+        )
+        return study_session
 
     def decline(self):
         self.status = "declined"
@@ -66,7 +83,12 @@ class StudySession(models.Model):
         super().save(*args, **kwargs)
 
     def user_can_enter(self, user):
-        return user.is_staff or user == self.student or user == self.tutor
+        if user.is_staff or user == self.student or user == self.tutor:
+            return True
+        return self.participants.filter(user=user, status="approved").exists()
+
+    def teacher_can_invite(self, user):
+        return user.is_staff or user == self.tutor
 
     def mark_completed(self):
         self.status = "completed"
@@ -75,6 +97,32 @@ class StudySession(models.Model):
 
     def __str__(self):
         return f"{self.student.username} and {self.tutor.username} - {self.subject}"
+
+
+class StudySessionParticipant(models.Model):
+    ROLE_CHOICES = [
+        ("student", "Student"),
+        ("lead_tutor", "Lead tutor"),
+        ("teacher", "Teacher"),
+    ]
+    STATUS_CHOICES = [
+        ("approved", "Approved"),
+        ("removed", "Removed"),
+    ]
+
+    session = models.ForeignKey(StudySession, on_delete=models.CASCADE, related_name="participants")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="study_session_participations")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="approved")
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="approved_class_participants")
+    source_request = models.OneToOneField(SessionRequest, on_delete=models.SET_NULL, null=True, blank=True, related_name="class_participant")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ["session", "user"]
+
+    def __str__(self):
+        return f"{self.user.username} in {self.session.room_code} as {self.role}"
 
 
 class SessionFeedback(models.Model):

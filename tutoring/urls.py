@@ -6,6 +6,7 @@ urlpatterns = [
     path("<int:tutor_id>/request/", views.request_session, name="request_session"),
     path("requests/", views.session_requests, name="session_requests"),
     path("requests/<int:request_id>/<str:action>/", views.respond_to_request, name="respond_to_request"),
+    path("classes/<int:session_id>/<str:room_code>/join-teacher/", views.join_teacher_class, name="join_teacher_class"),
     path("feedback/<int:session_id>/", views.feedback, name="feedback"),
     path("study-sisters/", views.study_sisters, name="study_sisters"),
     path("study-sisters/<int:connection_id>/block/", views.block_connection, name="block_connection"),
