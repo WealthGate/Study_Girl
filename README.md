@@ -274,6 +274,16 @@ Important limitation: if the free service restarts from a fresh filesystem, demo
 - Visit `/admin/` to approve tutor profiles and review detailed records.
 - Visit `/staff-dashboard/` for a presentation-friendly safety and activity summary.
 
+For hosted deployments, set these environment variables to create or update a superadmin during deploy/startup:
+
+```text
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=<strong-password>
+ADMIN_EMAIL=<admin-email>
+```
+
+`ADMIN_EMAIL` is optional. Never commit the real admin password into this repository.
+
 For the MVP, tutor approval is controlled by `TutorProfile.approval_status`. Only profiles marked `approved` appear in tutor discovery.
 
 ## Future improvements

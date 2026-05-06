@@ -1,3 +1,8 @@
+from io import StringIO
+from unittest.mock import patch
+
+from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
@@ -41,3 +46,26 @@ class SignUpTests(TestCase):
         })
         self.assertTrue(TutorProfile.objects.filter(user__username="tutoramara", approval_status="pending").exists())
         self.assertTrue(TutorApplication.objects.filter(user__username="tutoramara").exists())
+
+
+class EnsureAdminCommandTests(TestCase):
+    def test_skips_when_admin_credentials_are_missing(self):
+        output = StringIO()
+        with patch.dict("os.environ", {}, clear=True):
+            call_command("ensure_admin", stdout=output)
+        self.assertIn("Skipping superadmin setup", output.getvalue())
+        self.assertEqual(User.objects.count(), 0)
+
+    def test_creates_superadmin_from_environment(self):
+        output = StringIO()
+        env = {
+            "ADMIN_USERNAME": "admin",
+            "ADMIN_PASSWORD": "strong-admin-pass-123",
+            "ADMIN_EMAIL": "admin@example.com",
+        }
+        with patch.dict("os.environ", env, clear=True):
+            call_command("ensure_admin", stdout=output)
+        user = User.objects.get(username="admin")
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.check_password("strong-admin-pass-123"))
