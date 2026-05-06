@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="form-page">
+  <h1>Admin login</h1>
+  <div class="form-card">
+    <p class="muted">Staff/admin accounts can approve tutors, manage users, deactivate violators, and open Django admin for detailed editing.</p>
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button class="button">Log in as admin</button></form>
+    <p class="auth-switch"><a href="{% url 'login' %}">Student or tutor login</a></p>
+  </div>
+</section>
+{% endblock %}

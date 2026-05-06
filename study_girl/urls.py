@@ -8,10 +8,12 @@ from dashboard import views as dashboard_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("admin-login/", auth_views.LoginView.as_view(template_name="accounts/admin_login.html", redirect_authenticated_user=True), name="admin_login"),
     path("", dashboard_views.home, name="home"),
     path("about/", dashboard_views.about, name="about"),
     path("dashboard/", dashboard_views.dashboard, name="dashboard"),
     path("staff-dashboard/", dashboard_views.staff_dashboard, name="staff_dashboard"),
+    path("staff-dashboard/users/<int:user_id>/<str:action>/", dashboard_views.manage_user_access, name="manage_user_access"),
     path("staff-dashboard/applications/<int:application_id>/<str:action>/", dashboard_views.review_tutor_application, name="review_tutor_application"),
     path("accounts/", include("accounts.urls")),
     path("profiles/", include("profiles.urls")),

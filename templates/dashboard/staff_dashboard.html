@@ -4,6 +4,9 @@
   <p class="eyebrow">Admin dashboard</p>
   <h1>Study Girl safety and demo overview</h1>
   <p>Staff/admin users approve tutor accounts here. Tutors stay pending until a staff member approves their application.</p>
+  <div class="actions">
+    <a class="button" href="{% url 'admin:index' %}">Open full Django admin</a>
+  </div>
 </section>
 <section class="band">
   <div class="section-heading">
@@ -23,6 +26,41 @@
       </article>
     {% empty %}
       <p>No pending tutor applications.</p>
+    {% endfor %}
+  </div>
+</section>
+<section class="band">
+  <div class="section-heading">
+    <p class="eyebrow">Account control</p>
+    <h2>Admins and user access</h2>
+    <p>Make trusted people admins, remove admin access, deactivate violators so they cannot log in, or reactivate accounts after review. Use full Django admin for detailed profile and account editing.</p>
+  </div>
+  <div class="content-grid">
+    {% for account in managed_users %}
+      <article class="card">
+        <h3>{{ account.username }}</h3>
+        <p>
+          {% if account.is_staff %}<span class="pill">Admin</span>{% endif %}
+          {% if not account.is_active %}<span class="pill danger">Deactivated</span>{% endif %}
+          {% if account.student_profile %}<span class="pill">Student</span>{% endif %}
+          {% if account.tutor_profile %}<span class="pill">Tutor</span>{% endif %}
+        </p>
+        <div class="actions compact">
+          {% if account.is_staff %}
+            <a class="button secondary small" href="{% url 'manage_user_access' account.id 'remove-admin' %}">Remove admin</a>
+          {% else %}
+            <a class="button small" href="{% url 'manage_user_access' account.id 'make-admin' %}">Make admin</a>
+          {% endif %}
+          {% if account.is_active %}
+            <a class="button danger small" href="{% url 'manage_user_access' account.id 'deactivate' %}">Deactivate</a>
+          {% else %}
+            <a class="button small" href="{% url 'manage_user_access' account.id 'reactivate' %}">Reactivate</a>
+          {% endif %}
+          <a class="button secondary small" href="{% url 'admin:auth_user_change' account.id %}">Edit account</a>
+        </div>
+      </article>
+    {% empty %}
+      <p>No accounts found.</p>
     {% endfor %}
   </div>
 </section>

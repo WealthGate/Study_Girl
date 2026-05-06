@@ -46,6 +46,7 @@ def dashboard(request):
 @user_passes_test(lambda user: user.is_staff)
 def staff_dashboard(request):
     feedback_average = SessionFeedback.objects.aggregate(Avg("rating"))["rating__avg"] or 0
+    managed_users = User.objects.select_related("student_profile", "tutor_profile").order_by("-is_staff", "username")[:25]
     context = {
         "total_users": User.objects.count(),
         "total_students": StudentProfile.objects.count(),
@@ -57,6 +58,7 @@ def staff_dashboard(request):
         "open_reports": UserReport.objects.filter(status="open").count(),
         "resources": SoloStudyResource.objects.count(),
         "pending_applications": TutorApplication.objects.filter(status="pending").select_related("user")[:8],
+        "managed_users": managed_users,
     }
     return render(request, "dashboard/staff_dashboard.html", context)
 
@@ -80,4 +82,33 @@ def review_tutor_application(request, application_id, action):
     application.reviewed_by = request.user
     application.reviewed_at = timezone.now()
     application.save()
+    return redirect("staff_dashboard")
+
+
+@user_passes_test(lambda user: user.is_staff)
+def manage_user_access(request, user_id, action):
+    target = get_object_or_404(User, pk=user_id)
+    if target == request.user and action in ["remove-admin", "deactivate"]:
+        messages.error(request, "You cannot remove your own admin access or deactivate your own account.")
+        return redirect("staff_dashboard")
+
+    if action == "make-admin":
+        target.is_staff = True
+        target.save(update_fields=["is_staff"])
+        messages.success(request, f"{target.username} can now access admin tools.")
+    elif action == "remove-admin":
+        target.is_staff = False
+        target.is_superuser = False
+        target.save(update_fields=["is_staff", "is_superuser"])
+        messages.warning(request, f"{target.username} no longer has admin access.")
+    elif action == "deactivate":
+        target.is_active = False
+        target.save(update_fields=["is_active"])
+        messages.warning(request, f"{target.username} has been deactivated and cannot log in.")
+    elif action == "reactivate":
+        target.is_active = True
+        target.save(update_fields=["is_active"])
+        messages.success(request, f"{target.username} has been reactivated.")
+    else:
+        messages.error(request, "Unknown user management action.")
     return redirect("staff_dashboard")

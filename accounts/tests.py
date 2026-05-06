@@ -10,6 +10,11 @@ class SignUpTests(TestCase):
         self.assertContains(response, reverse("signup"))
         self.assertContains(response, "Create your account")
 
+    def test_public_navigation_links_to_admin_login(self):
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, reverse("admin_login"))
+        self.assertContains(response, "Admin login")
+
     def test_signup_page_links_back_to_login(self):
         response = self.client.get(reverse("signup"))
         self.assertContains(response, "Students can create their own username and password")
